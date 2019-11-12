@@ -1,0 +1,57 @@
+
+
+clean~
+clean
+*.swp
+.nfs*
+*.egg-info
+.ipynb_checkpoints
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.so
+
+# eclipse related files
+.project
+.pydevproject
+.settings/
+
+# pycharm files
+.idea/
+
+# data files
+*.nc
+fort.*
+
+# fig and movies
+*.jpg
+*.pdf
+*.mp4
+
+# openoffice
+*.odp
+
+# Prerequisites
+*.d
+
+# Object files
+*.o
+
+# Libraries
+*.lib
+*.a
+*.la
+*.lo
+
+# Executables
+*.out
+*.err
+*.app
+xios_server.exe
+
+# Kernel Module Compile Results
+*.mod*
+
+# dask
+dask-worker-space
