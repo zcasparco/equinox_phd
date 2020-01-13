@@ -55,5 +55,6 @@ xios_server.exe
 
 # dask
 dask-worker-space
+dask-worker*
 
 .DS_Store
