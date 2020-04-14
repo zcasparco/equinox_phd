@@ -14,13 +14,13 @@ import xarray as xr
 
 
 class drifter_dataframe(object):
-    
+
     def __init__(self, run_path, tdir_max=0, persist=True):
         if tdir_max==0:
             t='t?'
         else:
             t='t[1-%d]'%tdir_max
-        df = dd.read_csv(glob(run_path+t+'/float.????'), 
+        df = dd.read_csv(glob(run_path+t+'/float.????'),
                  names=['id','time','xgrid','ygrid','zgrid',
                         'depth','temp',
                         'u','v','dudt','dvdt',
@@ -32,10 +32,10 @@ class drifter_dataframe(object):
         if persist:
             df = df.persist()
         self.df = df
-            
+
     def __repr__(self):
         return str(self.df.head())
-        
+
     def init_bins(self,**kwargs):
         """
         dr.init_bins(y={'min': 0., 'max': 2800., 'step': 10}, x=...)
@@ -46,13 +46,13 @@ class drifter_dataframe(object):
             idx[key] = pd.IntervalIndex.from_breaks(bins)
             self.df[key+'_cut'] = self.df[key].map_partitions(pd.cut, bins=bins)
         self.idx = idx
-        
+
     def get_stats(self, V, stats, vbin):
         if isinstance(V, str):
             _V = [V]
         else:
             _V = V
-            
+
         S = []
         for v in _V:
             _ds = (self.df.groupby([vb+'_cut' for vb in vbin])[v].agg(stats)
@@ -75,4 +75,14 @@ def mean_position(df, L):
     y = df['y'].mean()
     return x, y
 
+def mean_latitutde(df):
+    """ compute the mean position, accounts for the wrapping of x
+    """
+    y = df['y'].mean()
+    return y
 
+def minmax_latitutde(df):
+    """ compute the mean position, accounts for the wrapping of x
+    """
+    ymin,ymax = df['y'].min(), df['y'].max()
+    return y
