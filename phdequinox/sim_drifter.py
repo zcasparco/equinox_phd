@@ -63,9 +63,9 @@ class drifter_dataframe(object):
         return xr.merge(S).assign_coords(**{vb+'_bins': self.idx[vb].mid for vb in vbin})
 
     def get_lats(self, stats,vbin):
-        ds = (self.df.groupby(vb+'_cut' for vb in vbin])[y].agg(stats)
-                 .compute().to_xarray().rename({s: v+'_'+s for s in stats}) #pandas
-                )
+        ds = (self.df.groupby([vb+'_cut' for vb in vbin])[y].agg(stats)
+            .compute().to_xarray().rename({s: 'y'+'_'+s for s in stats}) #pandas
+            )
 
         return ds.assign_coords(**{vb+'_bins': self.idx[vb].mid for vb in vbin})
 # should create a method to get default bins
