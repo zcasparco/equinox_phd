@@ -75,14 +75,8 @@ def mean_position(df, L):
     y = df['y'].mean()
     return x, y
 
-def mean_latitutde(df):
-    """ compute the mean position, accounts for the wrapping of x
+def latitudes(df):
+    """ compute the mean, minimum and maximum latitude (in km)
     """
-    y = df['y'].mean()
-    return y
-
-def minmax_latitutde(df):
-    """ compute the mean position, accounts for the wrapping of x
-    """
-    ymin,ymax = df['y'].min(), df['y'].max()
-    return y
+    ymean,ymin,ymax = df['y'].mean(),df['y'].min(), df['y'].max()
+    return ymean,ymin,ymax
