@@ -80,8 +80,61 @@ def mean_position(df, L):
     y = df['y'].mean()
     return x, y
 
-def latitudes(df):
-    """ compute the mean, minimum and maximum latitude (in km)
-    """
-    ymean,ymin,ymax = df['y'].mean(),df['y'].min(), df['y'].max()
-    return ymean,ymin,ymax
+def time_window_processing(df, myfun, columns, T, N, L, overlap=0.5, **myfun_kwargs):
+    ''' break each drifter time series into time windows and process each windows
+    
+    Parameters
+    ----------
+        
+        df: Dataframe
+            This dataframe represents a drifter time series
+        
+        T: float
+            Length of the time windows
+            
+        myfun
+            Method that will be applied to each window
+            
+        columns: list of str
+            List of columns of df that will become inputs of myfun
+            
+        N: int
+            Length of myfun outputs
+            
+        L: int
+            Maximum x (used in mean_position)
+            
+        overlap: float
+            Amount of overlap between windows. 
+            Should be between 0 and 1. 
+            Default is 0.5
+            
+        **myfun_kwargs
+            Keyword arguments for myfun
+    
+    '''
+    try:
+        dr_id = df.id.unique()[0]
+    except:
+        dr_id = df.name
+    p = df.sort_values('time').set_index('time')
+    tmin, tmax = p.index[0], p.index[-1]
+    # need to create an empty dataframe, in case the loop below is empty
+    myfun_out = myfun(*[None for c in columns], N, **myfun_kwargs) # get index from fake output
+    index = ['x','y']+['id']+list(myfun_out.index)
+    out = [pd.DataFrame({_:[] for _ in index})]
+    t=tmin
+    while t+T<tmax:
+        #
+        _p = p.loc[t:t+T]
+        # compute average position
+        x, y = mean_position(_p, L)
+        # apply myfun
+        myfun_out = myfun(*[_p[c] for c in columns], N, **myfun_kwargs)
+        # combine with mean position and time
+        _out = pd.DataFrame([[x, y]+[df.id.unique()[0]]+list(myfun_out)],
+                            columns = index,
+                            index = [t+T/2.])
+        out.append(_out)
+        t+=T*(1-overlap)
+    return pd.concat(out)
