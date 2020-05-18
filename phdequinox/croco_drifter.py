@@ -15,27 +15,91 @@ import xarray as xr
 
 class drifter_dataframe(object):
 
-    def __init__(self, run_path, tdir_max=0, persist=True):
+    def __init__(self, run_path, 
+                 parquet=True,
+                 tdir_max=0, 
+                 persist=True):
+        """ Description ...
+        
+        Parameters
+        ----------
+        ...
+        """
+        self.run_path = run_path
+        df = self._load_data(parquet, tdir_max)
+        #
+        dxy = int(self.run_path[run_path.find('km')-1])
+        df['x'] = df.xgrid*dxy
+        df['y'] = df.ygrid*dxy
+        self.df = df
+        self.dxy = dxy
+        #
+        if persist:
+            self.df = self.df.persist()
+            
+    def __repr__(self):
+        return str(self.df.head())
+
+    def _load_data(self, parquet, tdir_max):
+        """ load data into a dask dataframe
+        
+        Parameters
+        ----------
+        parquet: boolean
+            Activates parquet file reading if present
+        tdir_max: int
+            Limits number of tdir considered when reading raw text files
+        """
+        self.parquet_path = os.path.join(self.run_path, 
+                                         'diagnostics/floats.parquet')        
+        # test if parquet
+        if parquet and os.path.isdir(self.parquet_path):
+            return dd.read_parquet(self.parquet_path,
+                                   engine='fastparquet')
+        else:
+            return self._load_txt(tdir_max)
+                
+    def _load_txt(self, tdir_max):
+        """ Load original text files
+        """
         if tdir_max==0:
             t='t?'
         else:
             t='t[1-%d]'%tdir_max
-        df = dd.read_csv(glob(run_path+t+'/float.????'),
+        df = dd.read_csv(glob(self.run_path+t+'/float.????'),
                  names=['id','time','xgrid','ygrid','zgrid',
                         'depth','temp',
                         'u','v','dudt','dvdt',
                         'pres'],
                  delim_whitespace=True)
-        dxy = int(run_path[run_path.find('km')-1])
-        df['x'] = df.xgrid*dxy
-        df['y'] = df.ygrid*dxy
-        if persist:
-            df = df.persist()
-        self.df = df
+        return df
+    
+    def store_parquet(self, partition_size='100MB'):
+        """ store data under parquet format
 
-    def __repr__(self):
-        return str(self.df.head())
-
+        Note: could shuffle data by float id here ...
+        https://docs.dask.org/en/latest/dataframe-api.html#dask.dataframe.DataFrame.set_index
+        df = df.set_index('id')
+        ...
+        
+        Parameters
+        ----------
+        partition_size: str, optional
+            size of each partition that will be enforced
+            Default is '100MB' which is dask recommended size
+        """
+        # check diagnostic dir exists
+        _dir = os.path.join(self.run_path, 'diagnostics')
+        if not os.path.isdir(_dir):
+            os.mkdir(_dir)
+        #
+        df = self.df
+        # repartition such that each partition is 100MB big
+        if partition_size:
+            df = df.repartition(partition_size=partition_size)
+        #
+        df.to_parquet(self.parquet_path, engine='fastparquet')
+    
     def init_bins(self,**kwargs):
         """
         dr.init_bins(y={'min': 0., 'max': 2800., 'step': 10}, x=...)
@@ -138,3 +202,24 @@ def time_window_processing(df, myfun, columns, T, N, L, overlap=0.5, **myfun_kwa
         out.append(_out)
         t+=T*(1-overlap)
     return pd.concat(out)
+
+def _check_directory(dir, create=False):
+    """ Check existence of a directory and create it if necessary
+    """
+    _dir = path.join(run_dir, '')
+    # create diagnostics dir if not present
+    if path.isdir(directory):
+        # directory is an absolute path
+        _dir = directory
+    elif path.isdir(path.join(dirname, directory)):
+        # directory is relative
+        _dir = path.join(dirname, directory)
+    else:
+        if create:
+            # need to create the directory
+            _dir = path.join(dirname, directory)
+            os.mkdir(_dir)
+            print('Create new diagnostic directory {}'.format(_dir))
+        else:
+            raise OSError('Directory does not exist')
+    return _dir
