@@ -7,6 +7,7 @@ import dask.dataframe as dd
 #from dask import delayed
 import pandas as pd
 import xarray as xr
+from scipy import signal
 
 #%matplotlib inline
 #from matplotlib import pyplot as plt
@@ -138,3 +139,45 @@ def time_window_processing(df, myfun, columns, T, N, L, overlap=0.5, **myfun_kwa
         out.append(_out)
         t+=T*(1-overlap)
     return pd.concat(out)
+
+def correlate(v1, v2, N, detrend = False, dt=None):
+    ''' Compute a lagged correlation between two time series
+    These time series are assumed to be regularly sampled in time 
+    and along the same time line.
+    
+    Parameters
+    ----------
+    
+        v1, v2: ndarray, pd.Series
+            Time series to correlate, the index must be time if dt is not Provided
+            
+        N: int
+            Length of the output
+            
+        dt: float, optional
+            Time step
+            
+        detrend: boolean, optional
+            Turns detrending on or off. Default is False.
+
+    See: https://docs.scipy.org/doc/numpy/reference/generated/numpy.correlate.html
+    '''
+    if dt is None:
+        dt = v1.reset_index()['index'].diff().mean()
+    
+    if v1 is None and v2 is None:
+        _v1 = np.random.randn(N*2)
+        _v2 = np.random.randn(N*2)
+        if detrend:
+            pass
+        vv = np.correlate(_v1, _v2, mode='same')
+    else:
+        if detrend:
+            v1 = signal.detrend(v1)
+            v2 = signal.detrend(v2)
+        
+        #print('!!! Not implemented yet')
+        # https://www.machinelearningplus.com/time-series/time-series-analysis-python/
+        
+        vv = np.correlate(v1, v2, mode='same')
+    return pd.Series(vv[int(vv.size/2):][:N], index=np.arange(N)*dt)
