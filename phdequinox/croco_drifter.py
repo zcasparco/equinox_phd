@@ -77,10 +77,8 @@ class drifter_dataframe(object):
     
     def store_parquet(self, partition_size='100MB'):
         """ store data under parquet format
-<<<<<<< HEAD
-=======
+        =======
 
->>>>>>> 8e7cd93fac8a6280521ab64bcc861cd8cd41ed4e
         Note: could shuffle data by float id here ...
         https://docs.dask.org/en/latest/dataframe-api.html#dask.dataframe.DataFrame.set_index
         df = df.set_index('id')
@@ -207,7 +205,6 @@ def time_window_processing(df, myfun, columns, T, N, L, overlap=0.5, **myfun_kwa
         t+=T*(1-overlap)
     return pd.concat(out)
 
-<<<<<<< HEAD
 def correlate(v1, v2, N, detrend = False, dt=None):
     ''' Compute a lagged correlation between two time series
     These time series are assumed to be regularly sampled in time 
@@ -249,7 +246,7 @@ def correlate(v1, v2, N, detrend = False, dt=None):
         
         vv = np.correlate(v1, v2, mode='same')
     return pd.Series(vv[int(vv.size/2):][:N], index=np.arange(N)*dt)
-=======
+
 def _check_directory(dir, create=False):
     """ Check existence of a directory and create it if necessary
     """
@@ -270,4 +267,3 @@ def _check_directory(dir, create=False):
         else:
             raise OSError('Directory does not exist')
     return _dir
->>>>>>> 8e7cd93fac8a6280521ab64bcc861cd8cd41ed4e
