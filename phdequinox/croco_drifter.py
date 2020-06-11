@@ -233,13 +233,9 @@ def correlate(v1, v2, N, detrend = False, dt=None):
     if v1 is None and v2 is None:
         _v1 = np.random.randn(N*2)
         _v2 = np.random.randn(N*2)
-        a1 = np.nan
-        a2 = np.nan
-        if detrend:
-            pass
+        trend_var_1 = np.nan
+        trend_var_2 = np.nan
         vv = np.correlate(_v1, _v2, mode='same')
-        out = vv[int(vv.size/2):][:N]
-        index = np.arange(N)*dt
     else:
         if detrend:
             _v1 = v1
@@ -254,8 +250,12 @@ def correlate(v1, v2, N, detrend = False, dt=None):
         # https://www.machinelearningplus.com/time-series/time-series-analysis-python/
         
         vv = np.correlate(v1, v2, mode='same')
+    if detrend :
         out = np.hstack((vv[int(vv.size/2):][:N], np.array([trend_var_1,trend_var_2])))
         index = list(np.arange(N)*dt)+['trend_var_0', 'trend_var_1']
+    else :
+        out = vv[int(vv.size/2):][:N]
+        index=list(np.arange(N)*dt)
     return pd.Series(out,index=index)
 
 def _check_directory(dir, create=False):
