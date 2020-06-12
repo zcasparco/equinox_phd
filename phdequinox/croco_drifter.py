@@ -1,6 +1,7 @@
 import os
 from glob import glob
 #import threading
+import shutil
 
 import numpy as np
 import dask.dataframe as dd
@@ -75,14 +76,12 @@ class drifter_dataframe(object):
                  delim_whitespace=True)
         return df
     
-    def store_parquet(self, partition_size='100MB'):
+    def store_parquet(self, 
+                      partition_size='100MB', 
+                      index=None,
+                      overwrite=False,
+                     ):
         """ store data under parquet format
-        =======
-
-        Note: could shuffle data by float id here ...
-        https://docs.dask.org/en/latest/dataframe-api.html#dask.dataframe.DataFrame.set_index
-        df = df.set_index('id')
-        ...
         
         Parameters
         ----------
@@ -90,17 +89,31 @@ class drifter_dataframe(object):
             size of each partition that will be enforced
             Default is '100MB' which is dask recommended size
         """
+        parquet_path = self.parquet_path
+        if index:
+            parquet_path = parquet_path.replace('.parquet','_'+index+'.parquet')
         # check diagnostic dir exists
         _dir = os.path.join(self.run_path, 'diagnostics')
         if not os.path.isdir(_dir):
             os.mkdir(_dir)
+        # check wether an archive already exists
+        if os.path.isdir(parquet_path):
+            if overwrite:
+                print('deleting existing archive: {}'.format(parquet_path))
+                shutil.rmtree(parquet_path)
+            else:
+                print('Archive already existing: {}'.format(parquet_path))
+                return
         #
         df = self.df
+        #
+        if index:
+            df = df.set_index(index)
         # repartition such that each partition is 100MB big
         if partition_size:
-            df = df.repartition(partition_size=partition_size)
+            df = df.repartition(partition_size=partition_size)        
         #
-        df.to_parquet(self.parquet_path, engine='fastparquet')
+        df.to_parquet(parquet_path, engine='fastparquet')
     
     def init_bins(self,**kwargs):
         """
@@ -179,10 +192,16 @@ def time_window_processing(df, myfun, columns, T, N, L, overlap=0.5, **myfun_kwa
             Keyword arguments for myfun
     
     '''
-    try:
+    if hasattr(df, 'id'):
         dr_id = df.id.unique()[0]
-    except:
+    elif df.index.name=='id':
+        dr_id = df.index.unique()[0]
+    elif hasattr(df, 'name'):
+        # when mapped after groupby
         dr_id = df.name
+    else:
+        assert False, 'Cannot find float id'
+    #
     p = df.sort_values('time').set_index('time')
     tmin, tmax = p.index[0], p.index[-1]
     # need to create an empty dataframe, in case the loop below is empty
@@ -194,11 +213,11 @@ def time_window_processing(df, myfun, columns, T, N, L, overlap=0.5, **myfun_kwa
         #
         _p = p.loc[t:t+T]
         # compute average position
-        x, y = mean_position(_p, L)
+        x, y = cdr.mean_position(_p, L)
         # apply myfun
         myfun_out = myfun(*[_p[c] for c in columns], N, **myfun_kwargs)
         # combine with mean position and time
-        _out = pd.DataFrame([[x, y]+[df.id.unique()[0]]+list(myfun_out)],
+        _out = pd.DataFrame([[x, y]+[dr_id]+list(myfun_out)],
                             columns = index,
                             index = [t+T/2.])
         out.append(_out)
