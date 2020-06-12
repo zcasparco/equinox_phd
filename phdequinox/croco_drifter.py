@@ -20,7 +20,8 @@ class drifter_dataframe(object):
     def __init__(self, run_path, 
                  parquet=True,
                  tdir_max=0, 
-                 persist=True):
+		 index=None,                 
+		 persist=True):
         """ Description ...
         
         Parameters
@@ -28,7 +29,7 @@ class drifter_dataframe(object):
         ...
         """
         self.run_path = run_path
-        df = self._load_data(parquet, tdir_max)
+        df = self._load_data(parquet, tdir_max,index)
         #
         dxy = int(self.run_path[run_path.find('km')-1])
         df['x'] = df.xgrid*dxy
@@ -42,7 +43,7 @@ class drifter_dataframe(object):
     def __repr__(self):
         return str(self.df.head())
 
-    def _load_data(self, parquet, tdir_max):
+    def _load_data(self, parquet, tdir_max,index=None):
         """ load data into a dask dataframe
         
         Parameters
@@ -52,7 +53,11 @@ class drifter_dataframe(object):
         tdir_max: int
             Limits number of tdir considered when reading raw text files
         """
-        self.parquet_path = os.path.join(self.run_path, 
+	if index:
+		self.parquet_path = os.path.join(self.run_path,
+                                         'diagnostics/floats_'+index+'.parquet')
+	else:
+        	self.parquet_path = os.path.join(self.run_path, 
                                          'diagnostics/floats.parquet')        
         # test if parquet
         if parquet and os.path.isdir(self.parquet_path):
