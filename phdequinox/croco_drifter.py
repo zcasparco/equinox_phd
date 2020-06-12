@@ -20,8 +20,8 @@ class drifter_dataframe(object):
     def __init__(self, run_path, 
                  parquet=True,
                  tdir_max=0, 
-		 index=None,                 
-		 persist=True):
+                 index=None,                 
+                 persist=True):
         """ Description ...
         
         Parameters
@@ -53,12 +53,12 @@ class drifter_dataframe(object):
         tdir_max: int
             Limits number of tdir considered when reading raw text files
         """
-	if index:
-		self.parquet_path = os.path.join(self.run_path,
-                                         'diagnostics/floats_'+index+'.parquet')
-	else:
-        	self.parquet_path = os.path.join(self.run_path, 
-                                         'diagnostics/floats.parquet')        
+        if index:
+            self.parquet_path = os.path.join(self.run_path,
+                                             'diagnostics/floats_'+index+'.parquet')
+        else:
+            self.parquet_path = os.path.join(self.run_path, 
+                                             'diagnostics/floats.parquet')        
         # test if parquet
         if parquet and os.path.isdir(self.parquet_path):
             return dd.read_parquet(self.parquet_path,
