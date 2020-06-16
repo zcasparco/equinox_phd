@@ -218,7 +218,7 @@ def time_window_processing(df, myfun, columns, T, N, L, overlap=0.5, **myfun_kwa
         #
         _p = p.loc[t:t+T]
         # compute average position
-        x, y = cdr.mean_position(_p, L)
+        x, y = mean_position(_p, L)
         # apply myfun
         myfun_out = myfun(*[_p[c] for c in columns], N, **myfun_kwargs)
         # combine with mean position and time
@@ -273,7 +273,7 @@ def correlate(v1, v2, N, detrend = False, dt=None):
         #print('!!! Not implemented yet')
         # https://www.machinelearningplus.com/time-series/time-series-analysis-python/
         
-        vv = np.correlate(v1, v2, mode='same')
+        vv = np.correlate(v1, v2, mode='same')/N
     if detrend :
         out = np.hstack((vv[int(vv.size/2):][:N], np.array([trend_var_1,trend_var_2])))
         index = list(np.arange(N)*dt)+['trend_var_0', 'trend_var_1']
