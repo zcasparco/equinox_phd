@@ -207,7 +207,9 @@ def time_window_processing(df, myfun, columns, T, N, L, overlap=0.5, **myfun_kwa
     else:
         assert False, 'Cannot find float id'
     #
-    p = df.sort_values('time').set_index('time')
+    p = df.sort_values('time')#.set_index('time')
+    p = p.where(p.time.diff()!=0).dropna()
+    p = p.set_index('time')
     tmin, tmax = p.index[0], p.index[-1]
     # need to create an empty dataframe, in case the loop below is empty
     myfun_out = myfun(*[None for c in columns], N, **myfun_kwargs) # get index from fake output
