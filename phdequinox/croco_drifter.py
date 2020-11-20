@@ -257,9 +257,9 @@ def correlate(v1, v2, N, detrend = False, dt=None):
         dt = v1.reset_index()['index'].diff().mean()
     
     if v1 is None and v2 is None:
-        _v1 = np.random.randn(N*2)
-        _v2 = np.random.randn(N*2)
-        vv = np.correlate(_v1, _v2, mode='same')
+        _v1 = np.random.randn(N)
+        _v2 = np.random.randn(N)
+        vv = np.correlate(_v1[N//2:], _v2, mode='valid')
     else:
         if detrend:
             _v1 = v1
@@ -269,9 +269,9 @@ def correlate(v1, v2, N, detrend = False, dt=None):
         #print('!!! Not implemented yet')
         # https://www.machinelearningplus.com/time-series/time-series-analysis-python/
         
-        vv = np.correlate(v1, v2, mode='same')/N
-    out = vv[int(vv.size/2):][:N]
-    index=list(np.arange(N)*dt)
+        vv = np.correlate(v1.iloc[N//2:], v2, mode='valid')/N
+    out = vv[:][:N]
+    index=list(np.arange(N//2+1)*dt)
     return pd.Series(out,index=index)
 
 def detrending(v1,v2, N, detrend = True, dt=None):
