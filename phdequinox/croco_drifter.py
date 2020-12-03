@@ -269,7 +269,7 @@ def correlate(v1, v2, N, detrend = False, dt=None):
         #print('!!! Not implemented yet')
         # https://www.machinelearningplus.com/time-series/time-series-analysis-python/
         
-        vv = np.correlate(v1.iloc[N//2:], v2, mode='valid')/N
+        vv = np.correlate(v1.iloc[N//2:], v2, mode='valid')/(N/2)
     out = vv[:][:N]
     index=list(np.arange(N//2+1)*dt)
     return pd.Series(out,index=index)
