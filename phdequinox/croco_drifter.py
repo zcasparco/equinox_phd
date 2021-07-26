@@ -62,7 +62,7 @@ class drifter_dataframe(object):
         # test if parquet
         if parquet and os.path.isdir(self.parquet_path):
             return dd.read_parquet(self.parquet_path,
-                                   engine='fastparquet')
+                                   engine='pyarrow') #'fastparquet'
         else:
             return self._load_txt(tdir_max)
                 
@@ -118,7 +118,7 @@ class drifter_dataframe(object):
         if partition_size:
             df = df.repartition(partition_size=partition_size)        
         #
-        df.to_parquet(parquet_path, engine='fastparquet')
+        df.to_parquet(parquet_path, engine='pyarrow')#fastparquet
     
     def init_bins(self,**kwargs):
         """
